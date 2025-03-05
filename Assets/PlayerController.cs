@@ -7,52 +7,51 @@ public class PlayerController : NetworkBehaviour
     public float speed = 5f;
     private Rigidbody rb;
 
-    private void Start()
+    private void Awake()
     {
         rb = GetComponent<Rigidbody>();
-
-        // Enable interpolation for smoother movement
         rb.interpolation = RigidbodyInterpolation.Interpolate;
-        rb.freezeRotation = true; // Prevent unintended rotation
+        rb.freezeRotation = true; 
 
-        if (!IsOwner)
-        {
-            rb.isKinematic = true; // Non-owners should not apply physics forces
-        }
     }
 
-    private void FixedUpdate()
+    private void FixedUpdate() 
     {
-        if (!IsOwner) return; // Only allow the local player to move
+        if (!IsOwner) return;
 
         float moveX = Input.GetAxis("Horizontal");
         float moveZ = Input.GetAxis("Vertical");
 
-        Vector3 movement = new Vector3(moveX, 0, moveZ) * speed;
-
-        // Apply force for movement
-        rb.velocity = movement;
-
-        // Send movement update to the server
-        MoveServerRpc(rb.position);
+        Vector3 moveDirection = new Vector3(moveX, 0, moveZ).normalized;
+        MoveServerRpc(moveDirection);
     }
 
     [ServerRpc]
-    private void MoveServerRpc(Vector3 position, ServerRpcParams rpcParams = default)
+    private void MoveServerRpc(Vector3 direction, ServerRpcParams rpcParams = default)
     {
-        // Server validates movement and updates position
-        rb.position = position;
+        Debug.Log("On Server Update");
+        ulong clientId = rpcParams.Receive.SenderClientId;
 
-        // Send back updated position to clients
-        UpdatePositionClientRpc(rb.position);
+        if (NetworkManager.Singleton.ConnectedClients.TryGetValue(clientId, out NetworkClient client))
+        {
+            Rigidbody playerRb = client.PlayerObject.GetComponent<Rigidbody>();
+
+            if (playerRb != null)
+            {
+                playerRb.velocity = direction * speed;
+                UpdatePositionClientRpc(playerRb.position, playerRb.velocity);
+            }
+        }
     }
 
     [ClientRpc]
-    private void UpdatePositionClientRpc(Vector3 position)
+    private void UpdatePositionClientRpc(Vector3 position, Vector3 velocity)
     {
-        if (!IsOwner) // Only update position for non-owners
+        if (!IsOwner)
         {
-            rb.position = Vector3.Lerp(rb.position, position, Time.fixedDeltaTime * 10);
+            // Let NetworkTransform handle position syncing, so we no longer set rb.position manually
+            rb.velocity = velocity; // Still apply velocity for physics objects
         }
     }
+
 }

@@ -10,8 +10,27 @@ public class UIManager : MonoBehaviour
     public TMP_InputField portField;
     private UnityTransport transport;
 
+    private void OnClientConnected(ulong clientId)
+    {
+        Debug.Log($"Client {clientId} Connected!");
+
+        if (NetworkManager.Singleton.IsServer)
+        {
+            // Get the player's object and assign ownership
+            if (NetworkManager.Singleton.ConnectedClients.TryGetValue(clientId, out NetworkClient client))
+            {
+                if (client.PlayerObject != null && !client.PlayerObject.IsOwner)
+                {
+                    client.PlayerObject.GetComponent<NetworkObject>().ChangeOwnership(clientId);
+                    Debug.Log($"Ownership assigned to Client {clientId}");
+                }
+            }
+        }
+    }
+
     private void Start()
     {
+        NetworkManager.Singleton.OnClientConnectedCallback += OnClientConnected;
         transport = NetworkManager.Singleton.GetComponent<UnityTransport>();
 
         if (transport == null)
