@@ -13,17 +13,13 @@ public class GameplayManager : MonoBehaviour
 
     private void OnClientConnected(ulong clientId)
     {
-        Debug.Log($"Client {clientId} Connected!");
-
         if (NetworkManager.Singleton.IsServer)
         {
-            // Get the player's object and assign ownership
             if (NetworkManager.Singleton.ConnectedClients.TryGetValue(clientId, out NetworkClient client))
             {
                 if (client.PlayerObject != null && !client.PlayerObject.IsOwner)
                 {
                     client.PlayerObject.GetComponent<NetworkObject>().ChangeOwnership(clientId);
-                    Debug.Log($"Ownership assigned to Client {clientId}");
                 }
             }
         }
@@ -35,12 +31,8 @@ public class GameplayManager : MonoBehaviour
         transport = NetworkManager.Singleton.GetComponent<UnityTransport>();
 
         if (transport == null)
-        {
-            Debug.LogError("Unity Transport not found! Please add it to NetworkManager.");
             return;
-        }
 
-        // Default IP & Port values
         ipField.text = "127.0.0.1";
         portField.text = "7777";
     }
@@ -59,7 +51,6 @@ public class GameplayManager : MonoBehaviour
         transport.SetConnectionData("127.0.0.1", (ushort)port);
 
         NetworkManager.Singleton.StartHost();
-        Debug.Log("Started as Host on port " + port);
     }
 
     public void OnJoin()
@@ -72,7 +63,6 @@ public class GameplayManager : MonoBehaviour
         transport.SetConnectionData(ip, (ushort)port);
 
         NetworkManager.Singleton.StartClient();
-        Debug.Log("Connecting to " + ip + " on port " + port);
     }
 
 }

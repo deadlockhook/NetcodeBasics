@@ -29,7 +29,6 @@ public class PlayerController : NetworkBehaviour
     [ServerRpc]
     private void MoveServerRpc(Vector3 direction, ServerRpcParams rpcParams = default)
     {
-        Debug.Log("On Server Update");
         ulong clientId = rpcParams.Receive.SenderClientId;
 
         if (NetworkManager.Singleton.ConnectedClients.TryGetValue(clientId, out NetworkClient client))
@@ -48,10 +47,8 @@ public class PlayerController : NetworkBehaviour
     private void UpdatePositionClientRpc(Vector3 position, Vector3 velocity)
     {
         if (!IsOwner)
-        {
-            // Let NetworkTransform handle position syncing, so we no longer set rb.position manually
-            rb.velocity = velocity; // Still apply velocity for physics objects
-        }
+            rb.velocity = velocity; 
+        
     }
 
 }
