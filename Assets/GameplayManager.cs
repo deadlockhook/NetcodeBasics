@@ -4,11 +4,12 @@ using TMPro;
 using Unity.Netcode;
 using Unity.Netcode.Transports.UTP;
 
-public class UIManager : MonoBehaviour
+public class GameplayManager : MonoBehaviour
 {
     public TMP_InputField ipField;
     public TMP_InputField portField;
     private UnityTransport transport;
+    public GameObject canvasGameObject;
 
     private void OnClientConnected(ulong clientId)
     {
@@ -51,6 +52,7 @@ public class UIManager : MonoBehaviour
 
     public void OnHost()
     {
+        Destroy(canvasGameObject);
         if (transport == null) return;
 
         int port = int.Parse(portField.text);
@@ -62,6 +64,7 @@ public class UIManager : MonoBehaviour
 
     public void OnJoin()
     {
+        Destroy(canvasGameObject);
         if (transport == null) return;
 
         string ip = ipField.text;
